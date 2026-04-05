@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>🐣 Easter Jeopardy – TV Display</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet"/>
+<style>
+/* ── RESET & BASE ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:       #0d1f0a;
+  --bg2:      #122910;
+  --gold:     #f5c842;
+  --gold2:    #c8980a;
+  --green:    #2e7d32;
+  --green2:   #1b5e20;
+  --mint:     #a8e6cf;
+  --pink:     #f48fb1;
+  --lavender: #ce93d8;
+  --sky:      #81d4fa;
+  --peach:    #ffcc80;
+  --white:    #ffffff;
+  --dim:      rgba(255,255,255,0.5);
+  --card-r:   14px;
+}
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  font-family: 'Nunito', sans-serif;
+  color: var(--white);
+  overflow: hidden;
+}
+
+/* ── DECORATIVE EGG BG ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 10% 20%, rgba(164,222,119,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 90% 80%, rgba(244,143,177,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 50% 50%, rgba(46,125,50,0.12) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ── SCREENS ── */
+.screen { position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.screen.off { display: none; }
+
+/* ════════════════════════════════════════
+   GALLERY SCREEN
+════════════════════════════════════════ */
+#sGallery {
+  background: var(--bg);
+  padding: 28px 32px;
+  gap: 18px;
+  overflow-y: auto;
+  justify-content: flex-start;
+  align-items: center;
+}
+.g-title {
+  font-family: 'Bebas Neue', serif;
+  font-size: clamp(2.4rem, 5vw, 4.5rem);
+  color: var(--gold);
+  letter-spacing: 4px;
+  text-shadow: 0 0 50px rgba(245,200,66,0.45), 3px 3px 0 rgba(0,0,0,0.5);
+  text-align: center;
+  flex-shrink: 0;
+}
+.g-sub {
+  font-size: 0.85rem; font-weight: 800;
+  color: var(--dim); letter-spacing: 2.5px;
+  text-transform: uppercase; margin-top: -10px;
+  flex-shrink: 0; text-align: center;
+}
+
+/* Upload zone */
+.upload-zone {
+  width: 100%; max-width: 860px;
+  border: 2.5px dashed rgba(245,200,66,0.4);
+  border-radius: var(--card-r);
+  padding: 22px 20px;
+  text-align: center;
+  background: rgba(245,200,66,0.03);
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.upload-zone.drag-over {
+  border-color: var(--gold);
+  background: rgba(245,200,66,0.08);
+}
+.upload-btn {
+  display: inline-block;
+  background: var(--gold);
+  color: var(--bg);
+  border: none;
+  border-radius: 50px;
+  padding: 11px 28px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 900;
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.18s;
+  text-transform: uppercase;
+}
+.upload-btn:hover { background: var(--gold2); transform: translateY(-2px); }
+.upload-hint { font-size: 0.75rem; color: rgba(255,255,255,0.3); margin-top: 8px; font-weight: 700; letter-spacing: 1px; }
+
+/* Gallery grid */
+.g-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+  width: 100%; max-width: 860px;
+}
+.g-empty {
+  color: rgba(255,255,255,0.22);
+  font-size: 0.9rem; font-weight: 800;
+  letter-spacing: 2px; text-transform: uppercase;
+  text-align: center; padding: 20px 0;
+  grid-column: 1 / -1;
+}
+.g-card {
+  background: linear-gradient(145deg, #1a3a0a, #0d2008);
+  border: 2px solid rgba(245,200,66,0.25);
+  border-radius: var(--card-r);
+  padding: 18px 16px;
+  position: relative;
+  transition: all 0.2s;
+}
+.g-card:hover { border-color: var(--gold); transform: translateY(-3px); box-shadow: 0 10px 30px rgba(245,200,66,0.15); }
+.g-round {
+  font-family: 'Bebas Neue', serif;
+  font-size: 1.4rem; color: var(--gold);
+  letter-spacing: 2px; margin-bottom: 8px;
+}
+.g-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 14px; }
+.g-pill {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 50px;
+  padding: 2px 9px;
+  font-size: 0.7rem; font-weight: 800;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 0.3px;
+}
+.g-play {
+  width: 100%;
+  background: var(--gold);
+  color: var(--bg);
+  border: none; border-radius: 50px;
+  padding: 9px 0;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 900; font-size: 0.92rem;
+  cursor: pointer; transition: all 0.18s;
+  letter-spacing: 0.5px;
+}
+.g-play:hover { background: var(--gold2); }
+.g-del {
+  position: absolute; top: 10px; right: 12px;
+  background: none; border: none;
+  color: rgba(255,255,255,0.2);
+  font-size: 1rem; cursor: pointer; line-height: 1;
+  transition: color 0.2s;
+}
+.g-del:hover { color: #ff6b6b; }
+
+/* ════════════════════════════════════════
+   BOARD SCREEN
+════════════════════════════════════════ */
+#sBoard {
+  background: var(--bg);
+  padding: 0;
+  justify-content: flex-start;
+}
+.b-header {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px 8px;
+  flex-shrink: 0; z-index: 20;
+}
+.b-title {
+  font-family: 'Bebas Neue', serif;
+  font-size: clamp(1.3rem, 2.8vw, 2rem);
+  color: var(--gold); letter-spacing: 3px;
+}
+.b-back {
+  background: rgba(255,255,255,0.07);
+  border: 1.5px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.6);
+  border-radius: 50px; padding: 6px 16px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800; font-size: 0.82rem;
+  cursor: pointer; transition: all 0.2s;
+  letter-spacing: 0.5px;
+}
+.b-back:hover { border-color: var(--gold); color: var(--gold); }
+.b-hint {
+  font-size: 0.68rem; font-weight: 800;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(255,255,255,0.2);
+}
+
+.b-wrap {
+  flex: 1; width: 100%;
+  padding: 0 12px 12px;
+  display: flex; flex-direction: column;
+  min-height: 0;
+}
+#boardGrid {
+  flex: 1;
+  display: grid;
+  gap: 6px;
+  min-height: 0;
+}
+
+/* Category header cells */
+.c-hdr {
+  border-radius: var(--card-r);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 8px 6px; text-align: center;
+  min-height: 0; position: relative;
+  transition: all 0.25s;
+  border: 2px solid transparent;
+}
+.c-hdr.unrevealed {
+  background: linear-gradient(145deg, #1a3a0a, #0d2008);
+  border-color: rgba(255,255,255,0.08);
+  cursor: pointer;
+}
+.c-hdr.unrevealed:hover { border-color: rgba(245,200,66,0.5); }
+.c-hdr.revealed {
+  background: linear-gradient(145deg, #1e4a10, #0f2808);
+  border-color: rgba(245,200,66,0.35);
+  cursor: default;
+}
+.c-qmark {
+  font-family: 'Bebas Neue', serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  color: rgba(255,255,255,0.1);
+}
+.c-emoji { font-size: clamp(1rem, 2.2vw, 1.6rem); margin-bottom: 3px; }
+.c-name {
+  font-family: 'Bebas Neue', serif;
+  font-size: clamp(0.6rem, 1.2vw, 0.95rem);
+  letter-spacing: 1px; line-height: 1.2;
+  color: var(--white);
+}
+@keyframes catPop {
+  0%   { transform: scale(0.6) rotateY(90deg); opacity: 0; }
+  65%  { transform: scale(1.06) rotateY(-4deg); opacity: 1; }
+  100% { transform: scale(1) rotateY(0deg); opacity: 1; }
+}
+.c-hdr.popping { animation: catPop 0.45s cubic-bezier(.175,.885,.32,1.275) forwards; }
+
+/* Value cells */
+.v-cell {
+  border-radius: var(--card-r);
+  display: flex; align-items: center; justify-content: center;
+  min-height: 0; border: 2px solid transparent;
+  transition: all 0.2s; position: relative;
+}
+.v-cell.playable {
+  background: linear-gradient(145deg, #1a3a0a, #0d2008);
+  border-color: rgba(245,200,66,0.28);
+  cursor: pointer;
+}
+.v-cell.playable:hover {
+  border-color: var(--gold);
+  transform: scale(1.04);
+  box-shadow: 0 6px 28px rgba(245,200,66,0.28);
+  background: linear-gradient(145deg, #204a10, #102a08);
+}
+.v-cell.locked {
+  background: rgba(255,255,255,0.025);
+  border-color: rgba(255,255,255,0.05);
+  cursor: not-allowed;
+}
+.v-cell.used {
+  background: rgba(255,255,255,0.02);
+  border-color: rgba(255,255,255,0.04);
+  cursor: default;
+}
+.v-dollar {
+  font-family: 'Bebas Neue', serif;
+  font-size: clamp(1.1rem, 2.8vw, 2.2rem);
+  color: var(--gold);
+  text-shadow: 0 0 20px rgba(245,200,66,0.45);
+}
+.v-cell.used .v-dollar { opacity: 0; }
+.v-cell.locked .v-dollar { opacity: 0.12; }
+
+/* ════════════════════════════════════════
+   FULLSCREEN REVEAL (3 states)
+════════════════════════════════════════ */
+#sReveal {
+  background: var(--bg);
+  cursor: pointer;
+  padding: 40px;
+  gap: 0;
+  transition: background 0.4s;
+}
+#sReveal.state-0 { background: radial-gradient(ellipse 100% 100% at 50% 50%, #1a3a0a 0%, #060e03 70%); }
+#sReveal.state-1 { background: radial-gradient(ellipse 100% 100% at 50% 50%, #0d2252 0%, #060e1f 70%); }
+#sReveal.state-2 { background: radial-gradient(ellipse 100% 100% at 50% 50%, #1a0a2a 0%, #0a0614 70%); }
+
+.r-dots {
+  position: absolute; top: 22px; right: 26px;
+  display: flex; gap: 10px;
+}
+.r-dot {
+  width: 11px; height: 11px; border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  transition: background 0.3s;
+}
+.r-dot.on  { background: var(--gold); }
+.r-dot.done{ background: rgba(245,200,66,0.3); }
+
+.r-eggs {
+  position: absolute; inset: 0;
+  pointer-events: none; overflow: hidden;
+}
+.r-egg {
+  position: absolute;
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  opacity: 0.08;
+  animation: drift linear infinite;
+}
+@keyframes drift {
+  from { transform: translateY(110vh) rotate(0deg); }
+  to   { transform: translateY(-10vh) rotate(360deg); }
+}
+
+/* State 0: category + value */
+.r-cat-name {
+  font-family: 'Bebas Neue', serif;
+  font-size: clamp(1.4rem, 3vw, 2.5rem);
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 6px; text-align: center;
+  margin-bottom: 8px;
+}
+.r-cat-emoji {
+  font-size: clamp(3rem, 9vw, 8rem);
+  display: block; text-align: center;
+  margin-bottom: 10px;
+  animation: popIn 0.35s cubic-bezier(.175,.885,.32,1.275);
+}
+.r-value {
+  font-family: 'Bebas Neue', serif;
+  font-size: clamp(5rem, 16vw, 14rem);
+  color: var(--gold);
+  line-height: 1;
+  text-shadow: 0 0 80px rgba(245,200,66,0.55), 0 0 160px rgba(245,200,66,0.2);
+  text-align: center;
+  animation: popIn 0.3s cubic-bezier(.175,.885,.32,1.275);
+}
+
+/* State 1: question */
+.r-qlabel {
+  font-family: 'Bebas Neue', serif;
+  font-size: clamp(0.9rem, 1.8vw, 1.6rem);
+  color: rgba(255,255,255,0.32);
+  letter-spacing: 5px; margin-bottom: 16px; text-align: center;
+}
+.r-question {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.5rem, 4vw, 3.8rem);
+  color: var(--white);
+  text-align: center; max-width: 1100px;
+  line-height: 1.35;
+  animation: fadeUp 0.3s ease;
+}
+
+/* State 2: answer */
+.r-alabel {
+  font-family: 'Bebas Neue', serif;
+  font-size: clamp(0.9rem, 1.8vw, 1.6rem);
+  color: rgba(255,255,255,0.32);
+  letter-spacing: 5px; margin-bottom: 14px; text-align: center;
+}
+.r-answer {
+  font-family: 'Bebas Neue', serif;
+  font-size: clamp(2.8rem, 8vw, 7.5rem);
+  color: var(--mint);
+  text-align: center; max-width: 1100px;
+  line-height: 1.1;
+  text-shadow: 0 0 60px rgba(168,230,207,0.45);
+  animation: popIn 0.3s cubic-bezier(.175,.885,.32,1.275);
+}
+
+.r-hint {
+  position: absolute; bottom: 24px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.72rem; font-weight: 800;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: rgba(255,255,255,0.16);
+  white-space: nowrap;
+}
+
+@keyframes popIn {
+  from { transform: scale(0.65); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+@keyframes fadeUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+/* ── GALLERY SCROLLBAR ── */
+#sGallery::-webkit-scrollbar { width: 5px; }
+#sGallery::-webkit-scrollbar-track { background: transparent; }
+#sGallery::-webkit-scrollbar-thumb { background: rgba(245,200,66,0.2); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ GALLERY ══════════════════ -->
+<div class="screen" id="sGallery">
+  <div class="g-title">🐣 Easter Jeopardy</div>
+  <div class="g-sub">TV Display · Load a CSV to begin</div>
+
+  <div class="upload-zone" id="uploadZone">
+    <input type="file" id="csvFile" accept=".csv" multiple style="display:none"/>
+    <button class="upload-btn" onclick="document.getElementById('csvFile').click()">📂 Load CSV Game File(s)</button>
+    <div class="upload-hint">CSV columns: round · category · emoji · value · question · answer &nbsp;|&nbsp; Drag &amp; drop also works</div>
+  </div>
+
+  <div class="g-grid" id="gGrid">
+    <div class="g-empty" id="gEmpty">No games loaded — upload a CSV to get started 🐰</div>
+  </div>
+</div>
+
+<!-- ══════════════════ BOARD ══════════════════ -->
+<div class="screen off" id="sBoard">
+  <div class="b-header">
+    <button class="b-back" onclick="goGallery()">← Gallery</button>
+    <div class="b-title" id="bTitle">🐣 Easter Jeopardy</div>
+    <div class="b-hint">TAP ? TO REVEAL CATEGORIES · THEN TAP $ TO PLAY</div>
+  </div>
+  <div class="b-wrap">
+    <div id="boardGrid"></div>
+  </div>
+</div>
+
+<!-- ══════════════════ REVEAL OVERLAY ══════════════════ -->
+<div class="screen off" id="sReveal" onclick="nextState()">
+  <!-- floating eggs -->
+  <div class="r-eggs" id="rEggs"></div>
+  <!-- progress dots -->
+  <div class="r-dots">
+    <div class="r-dot" id="dot0"></div>
+    <div class="r-dot" id="dot1"></div>
+    <div class="r-dot" id="dot2"></div>
+  </div>
+  <!-- content swapped by JS -->
+  <div id="rContent"></div>
+  <div class="r-hint" id="rHint">TAP TO CONTINUE</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let games        = [];   // parsed game objects
+let activeGame   = null; // currently displayed game
+let catRevealed  = [];   // bool[] — which cats are revealed
+let usedCells    = {};   // "ci-ri" → true
+let allRevealed  = false;
+
+// Reveal overlay state
+let revCi    = -1;
+let revRi    = -1;
+let revState = 0; // 0=cat+value, 1=question, 2=answer
+
+// ═══════════════════════════════════════════
+//  SCREEN MANAGEMENT
+// ═══════════════════════════════════════════
+function show(id) {
+  ['sGallery','sBoard','sReveal'].forEach(s => {
+    document.getElementById(s).classList.toggle('off', s !== id);
+  });
+}
+
+// ═══════════════════════════════════════════
+//  CSV PARSING
+// ═══════════════════════════════════════════
+function parseCSV(text, fallbackName) {
+  // Normalize line endings
+  text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  if (lines.length < 2) return [];
+
+  // Split a CSV line respecting quoted fields
+  function splitLine(line) {
+    const cols = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"')           { inQ = !inQ; }
+      else if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+      else                     { cur += c; }
+    }
+    cols.push(cur.trim());
+    return cols;
+  }
+
+  const headers = splitLine(lines[0]).map(h => h.toLowerCase().replace(/[^a-z]/g,''));
+  function col(name) { return headers.indexOf(name); }
+
+  const iRound = col('round');
+  const iCat   = col('category');
+  const iEmoji = col('emoji');
+  const iVal   = col('value');
+  const iQ     = col('question');
+  const iA     = col('answer');
+
+  // Must have at least category, value, question, answer
+  if (iCat < 0 || iVal < 0 || iQ < 0 || iA < 0) {
+    alert('CSV missing required columns. Need: category, value, question, answer\nFound: ' + headers.join(', '));
+    return [];
+  }
+
+  // Group rows → round → category → questions[]
+  const roundMap = {};
+  for (let i = 1; i < lines.length; i++) {
+    const row = splitLine(lines[i]);
+    if (row.length < 4) continue;
+
+    const round = iRound >= 0 && row[iRound] ? row[iRound] : fallbackName;
+    const cat   = row[iCat]   || '';
+    const emoji = iEmoji >= 0 ? (row[iEmoji] || '❓') : '❓';
+    const value = parseInt(row[iVal]) || 0;
+    const q     = row[iQ] || '';
+    const a     = row[iA] || '';
+
+    if (!cat || !q || !a || !value) continue;
+
+    if (!roundMap[round])       roundMap[round] = {};
+    if (!roundMap[round][cat])  roundMap[round][cat] = { emoji, qs: [] };
+    roundMap[round][cat].qs.push({ value, q, a });
+  }
+
+  // Convert to array
+  const result = [];
+  for (const [round, catMap] of Object.entries(roundMap)) {
+    const categories = Object.entries(catMap).map(([name, data]) => ({
+      name,
+      emoji: data.emoji,
+      questions: data.qs.sort((x, y) => x.value - y.value),
+    }));
+    result.push({ round, categories });
+  }
+  return result;
+}
+
+// ═══════════════════════════════════════════
+//  FILE INPUT
+// ═══════════════════════════════════════════
+document.getElementById('csvFile').addEventListener('change', function(e) {
+  handleFiles(Array.from(e.target.files));
+  this.value = ''; // allow re-selecting same file
+});
+
+const uz = document.getElementById('uploadZone');
+uz.addEventListener('dragover',  e => { e.preventDefault(); uz.classList.add('drag-over'); });
+uz.addEventListener('dragleave', e => { uz.classList.remove('drag-over'); });
+uz.addEventListener('drop', e => {
+  e.preventDefault();
+  uz.classList.remove('drag-over');
+  handleFiles(Array.from(e.dataTransfer.files).filter(f => f.name.toLowerCase().endsWith('.csv')));
+});
+
+function handleFiles(files) {
+  if (!files.length) return;
+  let done = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const name = file.name.replace(/\.csv$/i,'').replace(/[_-]/g,' ');
+      const parsed = parseCSV(ev.target.result, name);
+      parsed.forEach(g => {
+        if (!games.find(x => x.round === g.round)) games.push(g);
+      });
+      if (++done === files.length) renderGallery();
+    };
+    reader.onerror = () => {
+      alert('Could not read: ' + file.name);
+      if (++done === files.length) renderGallery();
+    };
+    reader.readAsText(file, 'UTF-8');
+  });
+}
+
+// ═══════════════════════════════════════════
+//  GALLERY RENDER
+// ═══════════════════════════════════════════
+function renderGallery() {
+  const grid  = document.getElementById('gGrid');
+  const empty = document.getElementById('gEmpty');
+  grid.innerHTML = '';
+
+  if (!games.length) {
+    grid.appendChild(empty);
+    return;
+  }
+
+  games.forEach((game, gi) => {
+    const card = document.createElement('div');
+    card.className = 'g-card';
+
+    const pills = game.categories.map(c =>
+      `<span class="g-pill">${c.emoji} ${c.name}</span>`
+    ).join('');
+
+    card.innerHTML = `
+      <button class="g-del" title="Remove" onclick="removeGame(event,${gi})">✕</button>
+      <div class="g-round">${game.round}</div>
+      <div class="g-pills">${pills}</div>
+      <button class="g-play" onclick="startGame(${gi})">▶ Play This Round</button>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function removeGame(e, gi) {
+  e.stopPropagation();
+  games.splice(gi, 1);
+  renderGallery();
+}
+
+// ═══════════════════════════════════════════
+//  START A GAME
+// ═══════════════════════════════════════════
+function startGame(gi) {
+  activeGame   = games[gi];
+  catRevealed  = activeGame.categories.map(() => false);
+  usedCells    = {};
+  allRevealed  = false;
+
+  document.getElementById('bTitle').textContent = '🐣 ' + activeGame.round;
+  buildBoard();
+  show('sBoard');
+}
+
+function goGallery() {
+  show('sGallery');
+  activeGame = null;
+}
+
+// ═══════════════════════════════════════════
+//  BUILD THE BOARD
+// ═══════════════════════════════════════════
+function buildBoard() {
+  const grid = document.getElementById('boardGrid');
+  grid.innerHTML = '';
+
+  const cats    = activeGame.categories;
+  const numCats = cats.length;
+  const numRows = Math.max(...cats.map(c => c.questions.length));
+
+  // CSS grid: numCats columns, header row + numRows value rows
+  grid.style.gridTemplateColumns = `repeat(${numCats}, 1fr)`;
+  grid.style.gridTemplateRows    = `auto repeat(${numRows}, 1fr)`;
+
+  // ── Row 0: category headers ──
+  cats.forEach((cat, ci) => {
+    const cell = document.createElement('div');
+    cell.className = 'c-hdr ' + (catRevealed[ci] ? 'revealed' : 'unrevealed');
+    cell.id = `cat-${ci}`;
+
+    if (catRevealed[ci]) {
+      cell.innerHTML = `<div class="c-emoji">${cat.emoji}</div><div class="c-name">${cat.name}</div>`;
+    } else {
+      cell.innerHTML = `<div class="c-qmark">?</div>`;
+      cell.addEventListener('click', () => revealCat(ci));
+    }
+    grid.appendChild(cell);
+  });
+
+  // ── Rows 1…numRows: value cells ──
+  for (let ri = 0; ri < numRows; ri++) {
+    cats.forEach((cat, ci) => {
+      const cell = document.createElement('div');
+      const q    = cat.questions[ri];
+      const key  = `${ci}-${ri}`;
+
+      if (!q) {
+        cell.className = 'v-cell locked';
+      } else if (usedCells[key]) {
+        cell.className = 'v-cell used';
+        cell.innerHTML = `<div class="v-dollar">$${q.value}</div>`;
+      } else if (!allRevealed) {
+        cell.className = 'v-cell locked';
+        cell.innerHTML = `<div class="v-dollar">$${q.value}</div>`;
+      } else {
+        cell.className = 'v-cell playable';
+        cell.innerHTML = `<div class="v-dollar">$${q.value}</div>`;
+        cell.addEventListener('click', () => openReveal(ci, ri));
+      }
+      grid.appendChild(cell);
+    });
+  }
+}
+
+// ═══════════════════════════════════════════
+//  CATEGORY REVEAL
+// ═══════════════════════════════════════════
+function revealCat(ci) {
+  if (catRevealed[ci]) return;
+  catRevealed[ci] = true;
+
+  const cat  = activeGame.categories[ci];
+  const cell = document.getElementById(`cat-${ci}`);
+  cell.classList.remove('unrevealed');
+  cell.classList.add('revealed', 'popping');
+  cell.innerHTML = `<div class="c-emoji">${cat.emoji}</div><div class="c-name">${cat.name}</div>`;
+  cell.removeEventListener('click', () => revealCat(ci));
+
+  // Check if all categories revealed → unlock value cells
+  if (catRevealed.every(v => v)) {
+    allRevealed = true;
+    setTimeout(() => buildBoard(), 350);
+  }
+}
+
+// ═══════════════════════════════════════════
+//  FULLSCREEN REVEAL OVERLAY
+// ═══════════════════════════════════════════
+function spawnEggs() {
+  const container = document.getElementById('rEggs');
+  container.innerHTML = '';
+  const emojis = ['🐣','🥚','🐰','🌸','🌷','🦋','🌼','🐥'];
+  for (let i = 0; i < 12; i++) {
+    const e = document.createElement('div');
+    e.className = 'r-egg';
+    e.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    e.style.left = (Math.random() * 95) + '%';
+    e.style.animationDuration = (6 + Math.random() * 10) + 's';
+    e.style.animationDelay    = (-Math.random() * 12) + 's';
+    e.style.fontSize = clamp(1.5, 3, 2.5) + 'rem';
+    container.appendChild(e);
+  }
+}
+function clamp(min, max, val) { return Math.min(max, Math.max(min, val)); }
+
+function openReveal(ci, ri) {
+  const cat = activeGame.categories[ci];
+  const q   = cat.questions[ri];
+  if (!q || usedCells[`${ci}-${ri}`]) return;
+
+  revCi    = ci;
+  revRi    = ri;
+  revState = 0;
+
+  spawnEggs();
+  renderReveal();
+  show('sReveal');
+}
+
+function nextState() {
+  revState++;
+  if (revState > 2) {
+    // Mark used, go back to board
+    usedCells[`${revCi}-${revRi}`] = true;
+    show('sBoard');
+    buildBoard();
+    return;
+  }
+  renderReveal();
+}
+
+function renderReveal() {
+  const cat     = activeGame.categories[revCi];
+  const q       = cat.questions[revRi];
+  const overlay = document.getElementById('sReveal');
+  const content = document.getElementById('rContent');
+  const hint    = document.getElementById('rHint');
+
+  // Update class for background color shift
+  overlay.className = 'screen state-' + revState;
+
+  // Update dots
+  for (let i = 0; i < 3; i++) {
+    const d = document.getElementById('dot' + i);
+    d.className = 'r-dot' + (i === revState ? ' on' : (i < revState ? ' done' : ''));
+  }
+
+  if (revState === 0) {
+    content.innerHTML = `
+      <div class="r-cat-name">${cat.name}</div>
+      <span class="r-cat-emoji">${cat.emoji}</span>
+      <div class="r-value">$${q.value}</div>
+    `;
+    hint.textContent = 'TAP TO REVEAL QUESTION';
+
+  } else if (revState === 1) {
+    content.innerHTML = `
+      <div class="r-qlabel">${cat.emoji} ${cat.name} · $${q.value}</div>
+      <div class="r-question">${q.q}</div>
+    `;
+    hint.textContent = 'TAP TO REVEAL ANSWER';
+
+  } else {
+    content.innerHTML = `
+      <div class="r-alabel">ANSWER</div>
+      <div class="r-answer">${q.a}</div>
+    `;
+    hint.textContent = 'TAP TO RETURN TO BOARD';
+  }
+}
+
+// ═══════════════════════════════════════════
+//  KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  const rev = document.getElementById('sReveal');
+  const brd = document.getElementById('sBoard');
+
+  if ((e.key === ' ' || e.key === 'Enter') && !rev.classList.contains('off')) {
+    e.preventDefault();
+    nextState();
+  }
+  if (e.key === 'Escape') {
+    if (!rev.classList.contains('off')) {
+      // Bail out of current card without marking used
+      show('sBoard');
+    } else if (!brd.classList.contains('off')) {
+      goGallery();
+    }
+  }
+});
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+renderGallery();
+</script>
+</body>
+</html>
